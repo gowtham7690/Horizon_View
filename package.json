@@ -1,0 +1,34 @@
+{
+  "name": "flight-project",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@types/d3-geo": "^3.1.0",
+    "baseline-browser-mapping": "^2.8.32",
+    "d3-geo": "^3.1.1",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.24",
+    "next": "16.0.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-simple-maps": "^3.0.0",
+    "suncalc": "^1.9.0",
+    "tz-lookup": "^6.1.25"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.5",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+/* Light mode - Pastel sky colors */
+:root {
+  --background: #e6f3ff;
+  --foreground: #2c3e50;
+  --card-bg: #ffffff;
+  --card-shadow: rgba(135, 206, 235, 0.3);
+  --primary: #87ceeb;
+  --secondary: #ffb366;
+  --accent: #ffd700;
+  --border: #b8d4f0;
+  --sunrise: #ff7f50;
+  --sunset: #ff4500;
+  --sky-gradient-start: #87ceeb;
+  --sky-gradient-end: #ffb366;
+}
+
+/* Dark mode - Dusk/orange gradient */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1a1a2e;
+    --foreground: #e6e6e6;
+    --card-bg: #2d2d3a;
+    --card-shadow: rgba(255, 140, 0, 0.2);
+    --primary: #ff8c00;
+    --secondary: #ffd700;
+    --accent: #ffa500;
+    --border: #444455;
+    --sunrise: #ff6347;
+    --sunset: #dc143c;
+    --sky-gradient-start: #2d2d3a;
+    --sky-gradient-end: #ff8c00;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Custom utility classes */
+.card-soft {
+  background: var(--card-bg);
+  box-shadow: 0 4px 20px var(--card-shadow);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.glow-seat {
+  box-shadow: 0 0 15px var(--accent);
+  animation: pulse-glow 2s infinite;
+}
+
+.timeline-bar {
+  background: linear-gradient(90deg, var(--sunrise), var(--primary), var(--sunset));
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+body {
+  background: linear-gradient(135deg, var(--sky-gradient-start), var(--sky-gradient-end));
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  min-height: 100vh;
+}
