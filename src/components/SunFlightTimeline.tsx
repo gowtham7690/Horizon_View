@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { getSunPositionAtFlightProgress } from '@/lib/sun';
 
@@ -19,159 +19,298 @@ export default function SunFlightTimeline({
   path,
   scenicSide
 }: SunFlightTimelineProps) {
-  const [currentTime, setCurrentTime] = useState(new Date(departureTime));
+  const [sliderProgress, setSliderProgress] = useState(0);
 
   const sunPositions = useMemo(() => {
-    // Calculate sun positions along the flight path
     const positions = [];
-    const steps = 50;
+    const steps = 100;
 
     for (let i = 0; i <= steps; i++) {
       const progress = i / steps;
-      const flightProgress = progress;
-
-      // Get position along the path
       const pathIndex = Math.floor(progress * (path.length - 1));
       const currentPoint = path[pathIndex] || path[0];
+      const currentTime = new Date(departureTime.getTime() + progress * flightDuration * 60 * 60 * 1000);
 
-      // Get sun position at this point
       const sunPos = getSunPositionAtFlightProgress(
         departureTime,
         flightDuration,
-        flightProgress,
-        currentPoint[1], // latitude
-        currentPoint[0]  // longitude
+        progress,
+        currentPoint[1],
+        currentPoint[0]
       );
 
       positions.push({
         progress,
         altitude: sunPos.altitude,
         azimuth: sunPos.azimuth,
+        time: currentTime,
+        lat: currentPoint[1],
+        lng: currentPoint[0],
       });
     }
 
     return positions;
   }, [departureTime, flightDuration, path]);
 
-  useEffect(() => {
-    // Animate timeline
-    const interval = setInterval(() => {
-      setCurrentTime(prev => {
-        const newTime = new Date(prev.getTime() + (flightDuration * 60 * 60 * 1000) / 100); // 100 steps
-        if (newTime >= arrivalTime) {
-          clearInterval(interval);
-          return arrivalTime;
-        }
-        return newTime;
-      });
-    }, 50);
+  const currentProgress = sliderProgress;
+  const currentSunPos = sunPositions[Math.round(currentProgress * (sunPositions.length - 1))] || sunPositions[0];
+  const currentTime = currentSunPos?.time || departureTime;
 
-    return () => clearInterval(interval);
-  }, [departureTime, arrivalTime, flightDuration]);
-
-  const currentProgress = Math.min(
-    (currentTime.getTime() - departureTime.getTime()) / (arrivalTime.getTime() - departureTime.getTime()),
-    1
-  );
-
-  const currentSunPos = sunPositions[Math.floor(currentProgress * (sunPositions.length - 1))] || sunPositions[0];
-
-  // Convert azimuth to timeline position (simplified)
-  const getTimelineX = (azimuth: number) => {
-    // Map azimuth (0-360) to timeline position (0-100%)
-    // This is a simplification - in reality, we'd need to consider flight direction
-    return (azimuth / 360) * 100;
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSliderProgress(parseFloat(e.target.value));
   };
 
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getSunStatus = (altitude: number) => {
+    if (altitude > 0) return { text: 'Above Horizon', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30', icon: '☀️' };
+    if (altitude > -6) return { text: 'Near Horizon', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30', icon: '🌅' };
+    if (altitude > -18) return { text: 'Civil Twilight', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30', icon: '🌆' };
+    return { text: 'Below Horizon', color: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-100 dark:bg-slate-800/50', icon: '🌙' };
+  };
+
+  const sunStatus = currentSunPos ? getSunStatus(currentSunPos.altitude) : getSunStatus(0);
+
+  // Find sunrise and sunset times
+  const sunrisePos = sunPositions.find(p => p.altitude > -1 && p.altitude < 1 && p.progress > 0.1);
+  const sunsetPos = sunPositions.find(p => p.altitude > -1 && p.altitude < 1 && p.progress > 0.5);
+
   return (
-    <div className="card-soft p-6">
-      <h3 className="text-xl font-semibold mb-4 text-center">Sun Path Timeline</h3>
+    <div className="card-elevated p-6 md:p-8 h-full flex flex-col">
+      <div className="mb-6">
+        <h3 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">Sun Path Timeline</h3>
+        <p className="text-sm text-foreground/60">Track sun position throughout your flight</p>
+      </div>
 
-      {/* Timeline bar */}
-      <div className="relative mb-8">
-        <div className="timeline-bar h-4 rounded-full relative overflow-hidden">
-          {/* Progress indicator */}
-          <motion.div
-            className="absolute top-0 left-0 h-full bg-white/30 rounded-full"
-            initial={{ width: '0%' }}
-            animate={{ width: `${currentProgress * 100}%` }}
-            transition={{ duration: 0.1 }}
-          />
+      {/* Manual Slider Control */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <label className="text-xs text-foreground/60 block mb-1">Flight Progress</label>
+            <span className="text-xl font-bold text-foreground">{Math.round(currentProgress * 100)}%</span>
+          </div>
+          <div className="text-right">
+            <label className="text-xs text-foreground/60 block mb-1">Current Time</label>
+            <span className="text-xl font-bold text-primary">{formatTime(currentTime)}</span>
+          </div>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={currentProgress}
+          onChange={handleSliderChange}
+          className="w-full h-3 bg-gradient-to-r from-emerald-500 via-blue-500 to-red-500 rounded-lg appearance-none cursor-pointer slider-thumb"
+          style={{
+            background: `linear-gradient(to right, 
+              #10b981 0%, 
+              #10b981 ${currentProgress * 100}%, 
+              #3b82f6 ${currentProgress * 100}%, 
+              #ef4444 100%)`
+          }}
+        />
+        <div className="flex justify-between text-xs text-foreground/60 mt-2 font-medium">
+          <span>Departure: {formatTime(departureTime)}</span>
+          <span>Arrival: {formatTime(arrivalTime)}</span>
+        </div>
+      </div>
 
-          {/* Sun icon moving along timeline */}
-          {currentSunPos && (
+      {/* Visual Sun Path Diagram */}
+      <div className="mb-6 p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-800/50 dark:to-blue-900/20 border-2 border-border">
+        <div className="text-center mb-4">
+          <h4 className="text-sm font-bold text-foreground mb-2">Sun Position in Sky</h4>
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${sunStatus.bg} ${sunStatus.color} text-sm font-semibold`}>
+            <span className="text-lg">{sunStatus.icon}</span>
+            {sunStatus.text}
+          </div>
+        </div>
+        
+        {/* Visual sky representation */}
+        <div className="relative h-40 rounded-xl overflow-hidden bg-gradient-to-b from-blue-400 via-orange-300 to-red-400 dark:from-blue-900 dark:via-orange-800 dark:to-red-900 mb-4">
+          {/* Horizon line */}
+          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-foreground/50 z-10">
+            <div className="absolute left-1/2 transform -translate-x-1/2 -top-3 bg-foreground/80 text-white text-[10px] px-2 py-1 rounded font-semibold">
+              Horizon
+            </div>
+            
+            {/* Airplane on horizon */}
             <motion.div
-              className="absolute top-1/2 transform -translate-y-1/2 w-6 h-6 text-yellow-400"
+              className="absolute top-1/2 transform -translate-y-1/2 z-30"
               style={{
-                left: `${getTimelineX(currentSunPos.azimuth)}%`,
+                left: `${currentProgress * 100}%`,
                 transform: 'translate(-50%, -50%)',
               }}
-              animate={{
-                rotate: currentSunPos.altitude > 0 ? 0 : 180,
-              }}
-              transition={{ duration: 0.5 }}
             >
               <motion.svg
+                className="w-10 h-10 text-white drop-shadow-lg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                animate={{
+                  x: [0, 2, 0],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <path d="M21.59 11.59a2 2 0 0 0-2.82-2.82l-8 8a2 2 0 0 0 0 2.82l8 8a2 2 0 0 0 2.82-2.82L16.41 20l5.18-5.18z" />
+                <path d="M2.41 11.59a2 2 0 0 1 2.82-2.82l8 8a2 2 0 0 1 0 2.82l-8 8a2 2 0 0 1-2.82-2.82L7.59 20l-5.18-5.18z" />
+                <path d="M12 2v20" />
+              </motion.svg>
+            </motion.div>
+          </div>
+          
+          {/* Sun position indicator */}
+          {currentSunPos && (
+            <motion.div
+              className="absolute left-1/2 transform -translate-x-1/2 z-20"
+              style={{
+                bottom: `${50 + (currentSunPos.altitude / 90) * 50}%`,
+                transition: 'bottom 0.1s ease-out'
+              }}
+              animate={{
+                scale: currentSunPos.altitude > 0 ? 1.3 : currentSunPos.altitude > -6 ? 1.1 : 0.8,
+              }}
+            >
+              <motion.svg
+                className="w-12 h-12 text-amber-400 drop-shadow-2xl"
                 viewBox="0 0 24 24"
                 fill="currentColor"
                 animate={{
-                  scale: currentSunPos.altitude > -6 ? 1 : 0.5, // Sun gets smaller near horizon
+                  rotate: currentSunPos.altitude > 0 ? [0, 360] : [180, 540],
                 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
               >
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
               </motion.svg>
+              {/* Altitude label */}
+              <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                <div className="bg-foreground/95 text-white text-xs px-3 py-1.5 rounded-lg shadow-xl font-bold">
+                  {Math.round(currentSunPos.altitude)}°
+                </div>
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-foreground/95"></div>
+              </div>
             </motion.div>
           )}
-        </div>
 
-        {/* Time labels */}
-        <div className="flex justify-between text-sm text-foreground/70 mt-2">
-          <span>{departureTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-          <span>{arrivalTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          {/* Sunrise/Sunset markers */}
+          {sunrisePos && (
+            <div 
+              className="absolute top-1/2 transform -translate-y-1/2 z-15"
+              style={{ left: `${sunrisePos.progress * 100}%` }}
+            >
+              <div className="w-1 h-8 bg-orange-500 rounded-full"></div>
+              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[10px] font-semibold text-orange-600 dark:text-orange-400 whitespace-nowrap">
+                Sunrise
+              </div>
+            </div>
+          )}
+          {sunsetPos && (
+            <div 
+              className="absolute top-1/2 transform -translate-y-1/2 z-15"
+              style={{ left: `${sunsetPos.progress * 100}%` }}
+            >
+              <div className="w-1 h-8 bg-red-500 rounded-full"></div>
+              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[10px] font-semibold text-red-600 dark:text-red-400 whitespace-nowrap">
+                Sunset
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Altitude scale */}
+        <div className="grid grid-cols-3 gap-2 text-xs">
+          <div className="text-center">
+            <div className="font-bold text-foreground/80">+90°</div>
+            <div className="text-foreground/60">Zenith</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold text-foreground/80">0°</div>
+            <div className="text-foreground/60">Horizon</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold text-foreground/80">-90°</div>
+            <div className="text-foreground/60">Nadir</div>
+          </div>
         </div>
       </div>
 
-      {/* Altitude indicator */}
-      <div className="mb-4">
-        <div className="flex justify-between text-sm mb-2">
-          <span>Sun Altitude</span>
-          <span>{currentSunPos ? `${Math.round(currentSunPos.altitude)}°` : '0°'}</span>
+      {/* Key Metrics Grid */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        {/* Sun Altitude */}
+        <div className="p-5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-2 border-amber-200 dark:border-amber-800">
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <span className="text-xs font-bold text-foreground/70 uppercase tracking-wide">Altitude</span>
+          </div>
+          <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1">
+            {currentSunPos ? `${Math.round(currentSunPos.altitude)}°` : '0°'}
+          </div>
+          <div className="text-xs text-foreground/60">
+            {currentSunPos && currentSunPos.altitude > 0 ? 'Above horizon' : currentSunPos && currentSunPos.altitude > -6 ? 'Near horizon' : 'Below horizon'}
+          </div>
         </div>
-        <div className="w-full bg-foreground/20 rounded-full h-2">
-          <motion.div
-            className="bg-yellow-400 h-2 rounded-full"
-            initial={{ width: '0%' }}
-            animate={{
-              width: `${Math.max(0, Math.min(100, ((currentSunPos?.altitude || 0) + 90) / 180 * 100))}%`
-            }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
-        <div className="flex justify-between text-xs text-foreground/50 mt-1">
-          <span>-90°</span>
-          <span>0°</span>
-          <span>+90°</span>
+
+        {/* Sun Azimuth */}
+        <div className="p-5 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-2 border-blue-200 dark:border-blue-800">
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+            <span className="text-xs font-bold text-foreground/70 uppercase tracking-wide">Azimuth</span>
+          </div>
+          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+            {currentSunPos ? `${Math.round(currentSunPos.azimuth)}°` : '0°'}
+          </div>
+          <div className="text-xs text-foreground/60">
+            {currentSunPos && (currentSunPos.azimuth >= 0 && currentSunPos.azimuth < 90) ? 'North-East' :
+             currentSunPos && (currentSunPos.azimuth >= 90 && currentSunPos.azimuth < 180) ? 'South-East' :
+             currentSunPos && (currentSunPos.azimuth >= 180 && currentSunPos.azimuth < 270) ? 'South-West' : 'North-West'}
+          </div>
         </div>
       </div>
 
       {/* Scenic windows indicator */}
-      <div className="bg-primary/10 rounded-lg p-4">
-        <div className="text-sm font-medium text-primary mb-2">
-          Scenic Windows: {scenicSide.toUpperCase()}
+      <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl p-6 border-2 border-primary/20 mb-4">
+        <div className="flex items-center gap-3 mb-3">
+          <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          <div className="text-base font-bold text-primary">
+            Best Seats: {scenicSide.toUpperCase()} Side
+          </div>
         </div>
-        <div className="text-xs text-foreground/70">
-          {scenicSide === 'left' && 'Left side windows (A, B, C) for best sunrise/sunset views'}
-          {scenicSide === 'right' && 'Right side windows (D, E, F) for best sunrise/sunset views'}
-          {scenicSide === 'both' && 'Both sides offer excellent sunrise/sunset views throughout the flight'}
+        <div className="text-sm text-foreground/80 leading-relaxed">
+          {scenicSide === 'left' && 'Choose left window seat (A) for optimal sunrise/sunset views'}
+          {scenicSide === 'right' && 'Choose right window seat (F) for optimal sunrise/sunset views'}
+          {scenicSide === 'both' && 'Both window seats (A and F) offer excellent sunrise/sunset views'}
         </div>
       </div>
 
-      {/* Current flight info */}
-      <div className="mt-4 text-center text-sm text-foreground/60">
-        Flight Progress: {Math.round(currentProgress * 100)}% •
-        Current Time: {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      {/* Location Info */}
+      <div className="mt-auto pt-4 border-t border-border">
+        <div className="flex items-center justify-between text-sm">
+          <div>
+            <div className="text-xs text-foreground/60 mb-1">Current Location</div>
+            <div className="font-semibold text-foreground">
+              {currentSunPos ? `${currentSunPos.lat.toFixed(2)}°N, ${Math.abs(currentSunPos.lng).toFixed(2)}°${currentSunPos.lng >= 0 ? 'E' : 'W'}` : 'N/A'}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-foreground/60 mb-1">Flight Duration</div>
+            <div className="font-semibold text-foreground">{flightDuration.toFixed(1)} hours</div>
+          </div>
+        </div>
       </div>
     </div>
   );

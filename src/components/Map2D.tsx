@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { ComposableMap, Geographies, Geography, Line, Marker } from 'react-simple-maps';
 import { motion } from 'framer-motion';
 
@@ -15,16 +14,15 @@ interface Map2DProps {
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
 export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalLng, path }: Map2DProps) {
-  // Calculate bounding box from all path points to ensure entire route is visible
+
+  // Calculate bounding box
   const allPoints = path && path.length > 0 ? path : [[departureLng, departureLat], [arrivalLng, arrivalLat]];
   
-  // Find min/max latitudes and longitudes
   let minLat = Math.min(departureLat, arrivalLat);
   let maxLat = Math.max(departureLat, arrivalLat);
   let minLng = Math.min(departureLng, arrivalLng);
   let maxLng = Math.max(departureLng, arrivalLng);
 
-  // Check all path points
   allPoints.forEach(([lng, lat]) => {
     minLat = Math.min(minLat, lat);
     maxLat = Math.max(maxLat, lat);
@@ -32,56 +30,45 @@ export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalL
     maxLng = Math.max(maxLng, lng);
   });
 
-  // Handle longitude wrapping (crossing date line)
   const lngSpan = maxLng - minLng;
   const lngSpanWrapped = (360 - lngSpan) % 360;
   const crossesDateLine = lngSpanWrapped < lngSpan;
 
-  // Calculate center
   let centerLng: number;
   let centerLat = (minLat + maxLat) / 2;
 
   if (crossesDateLine) {
-    // If crossing date line, center on the Pacific side
     centerLng = ((minLng + maxLng + 360) / 2) % 360;
     if (centerLng > 180) centerLng -= 360;
   } else {
     centerLng = (minLng + maxLng) / 2;
   }
 
-  // Calculate span with padding
   const latSpan = maxLat - minLat;
   const effectiveLngSpan = crossesDateLine ? lngSpanWrapped : lngSpan;
-  
-  // Add 20% padding on all sides
   const padding = 0.2;
   const paddedLatSpan = latSpan * (1 + padding * 2);
   const paddedLngSpan = effectiveLngSpan * (1 + padding * 2);
-
-  // Calculate scale based on the larger dimension
-  // Use a formula that works well for both short and long flights
   const maxSpan = Math.max(paddedLatSpan, paddedLngSpan);
   
-  // Adaptive scale calculation
-  // For very long flights (span > 90 degrees), use smaller scale
-  // For shorter flights, use larger scale
   let scale: number;
   if (maxSpan > 90) {
-    // Very long flights (e.g., trans-Pacific, trans-Atlantic)
     scale = Math.max(80, Math.min(200, 150 / (maxSpan / 180)));
   } else if (maxSpan > 45) {
-    // Long flights (e.g., cross-continental)
     scale = Math.max(150, Math.min(400, 300 / (maxSpan / 90)));
   } else {
-    // Short to medium flights
     scale = Math.max(200, Math.min(800, 600 / (maxSpan / 45)));
   }
 
-  return (
-    <div className="card-soft p-6">
-      <h3 className="text-xl font-semibold mb-4 text-center">Flight Path</h3>
 
-      <div className="w-full h-96 overflow-hidden rounded-lg">
+  return (
+    <div className="card-elevated p-6 md:p-8">
+      <div className="mb-6">
+        <h3 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">Flight Path</h3>
+        <p className="text-sm text-foreground/60">Great circle route visualization</p>
+      </div>
+
+      <div className="w-full h-[350px] md:h-[450px] overflow-hidden rounded-2xl bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 border-2 border-border/50 shadow-inner relative">
         <ComposableMap
           projection="geoMercator"
           projectionConfig={{
@@ -89,8 +76,8 @@ export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalL
             center: [centerLng, centerLat],
             rotate: crossesDateLine ? [-centerLng, 0, 0] : [0, 0, 0],
           }}
-          width={800}
-          height={400}
+          width={1200}
+          height={600}
           style={{
             width: "100%",
             height: "100%",
@@ -104,12 +91,12 @@ export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalL
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}
-                  fill="#e6f3ff"
-                  stroke="#87ceeb"
-                  strokeWidth={0.5}
+                  fill="#e0f2fe"
+                  stroke="#bae6fd"
+                  strokeWidth={0.3}
                   style={{
                     default: { outline: 'none' },
-                    hover: { outline: 'none', fill: '#b8d4f0' },
+                    hover: { outline: 'none', fill: '#7dd3fc', transition: 'all 0.3s' },
                     pressed: { outline: 'none' },
                   }}
                 />
@@ -117,82 +104,140 @@ export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalL
             }
           </Geographies>
 
-          {/* Straight flight path line from depart to arrive */}
-          <Line
-            from={[departureLng, departureLat]}
-            to={[arrivalLng, arrivalLat]}
-            stroke="#ff4500"
-            strokeWidth={3}
-            strokeDasharray="5,5"
-            style={{
-              animation: 'dash 3s linear infinite',
-            }}
-          />
+          {/* Great circle flight path with gradient */}
+          {path.map((point, index) => {
+            if (index === 0) return null;
+            const prevPoint = path[index - 1];
+            return (
+              <Line
+                key={index}
+                from={prevPoint}
+                to={point}
+                stroke="url(#flightGradient)"
+                strokeWidth={4}
+                style={{
+                  filter: 'drop-shadow(0 2px 8px rgba(59, 130, 246, 0.4))',
+                }}
+              />
+            );
+          })}
+          <defs>
+            <linearGradient id="flightGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity={1} />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity={1} />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
 
           {/* Departure marker */}
           <Marker coordinates={[departureLng, departureLat]}>
-            <motion.circle
-              r={6}
-              fill="#228b22"
-              stroke="#ffffff"
-              strokeWidth={2}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-            />
-            <motion.text
-              textAnchor="middle"
-              y={-10}
-              style={{ fontSize: '12px', fontWeight: 'bold', fill: '#228b22' }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1, duration: 0.5 }}
-            >
-              DEPART
-            </motion.text>
+            <g>
+              <motion.circle
+                r={10}
+                fill="#10b981"
+                stroke="#ffffff"
+                strokeWidth={3}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.5, duration: 0.5, type: "spring" }}
+                filter="url(#glow)"
+              />
+              <motion.circle
+                r={15}
+                fill="none"
+                stroke="#10b981"
+                strokeWidth={2}
+                strokeOpacity={0.3}
+                initial={{ scale: 0, opacity: 0.8 }}
+                animate={{ scale: 2, opacity: 0 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+              />
+              <motion.text
+                textAnchor="middle"
+                y={-20}
+                style={{ 
+                  fontSize: '12px', 
+                  fontWeight: '700', 
+                  fill: '#10b981',
+                  textShadow: '0 1px 3px rgba(255,255,255,0.9)',
+                  letterSpacing: '0.5px'
+                }}
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1, duration: 0.5 }}
+              >
+                DEPART
+              </motion.text>
+            </g>
           </Marker>
 
           {/* Arrival marker */}
           <Marker coordinates={[arrivalLng, arrivalLat]}>
-            <motion.circle
-              r={6}
-              fill="#dc143c"
-              stroke="#ffffff"
-              strokeWidth={2}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 1, duration: 0.5 }}
-            />
-            <motion.text
-              textAnchor="middle"
-              y={-10}
-              style={{ fontSize: '12px', fontWeight: 'bold', fill: '#dc143c' }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.5, duration: 0.5 }}
-            >
-              ARRIVE
-            </motion.text>
+            <g>
+              <motion.circle
+                r={10}
+                fill="#ef4444"
+                stroke="#ffffff"
+                strokeWidth={3}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 1, duration: 0.5, type: "spring" }}
+                filter="url(#glow)"
+              />
+              <motion.circle
+                r={15}
+                fill="none"
+                stroke="#ef4444"
+                strokeWidth={2}
+                strokeOpacity={0.3}
+                initial={{ scale: 0, opacity: 0.8 }}
+                animate={{ scale: 2, opacity: 0 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
+              />
+              <motion.text
+                textAnchor="middle"
+                y={-20}
+                style={{ 
+                  fontSize: '12px', 
+                  fontWeight: '700', 
+                  fill: '#ef4444',
+                  textShadow: '0 1px 3px rgba(255,255,255,0.9)',
+                  letterSpacing: '0.5px'
+                }}
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5, duration: 0.5 }}
+              >
+                ARRIVE
+              </motion.text>
+            </g>
           </Marker>
         </ComposableMap>
       </div>
 
       {/* Legend */}
-      <div className="flex justify-center gap-6 mt-4 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-green-600 rounded-full" />
-          <span>Departure</span>
+      <div className="flex justify-center gap-6 md:gap-8 mt-6 pt-4 border-t border-border">
+        <div className="flex items-center gap-2.5">
+          <div className="w-4 h-4 bg-emerald-500 rounded-full shadow-md ring-2 ring-emerald-200 dark:ring-emerald-900"></div>
+          <span className="text-sm font-semibold text-foreground/80">Departure</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 bg-orange-400 border-dashed border-t-2" style={{borderTopStyle: 'dashed'}} />
-          <span>Flight Path</span>
+        <div className="flex items-center gap-2.5">
+          <div className="w-12 h-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-red-500 rounded-full"></div>
+          <span className="text-sm font-semibold text-foreground/80">Flight Path</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-red-600 rounded-full" />
-          <span>Arrival</span>
+        <div className="flex items-center gap-2.5">
+          <div className="w-4 h-4 bg-red-500 rounded-full shadow-md ring-2 ring-red-200 dark:ring-red-900"></div>
+          <span className="text-sm font-semibold text-foreground/80">Arrival</span>
         </div>
       </div>
-
     </div>
   );
 }

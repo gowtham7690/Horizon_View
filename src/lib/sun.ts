@@ -264,20 +264,21 @@ export function isSunVisibleDuringFlight(sunData: FlightSunData): boolean {
 
 /**
  * Get recommended seats based on scenic side
+ * Only window seats are recommended (A and F are the only window seats)
  * @param scenicSide The determined scenic side
- * @returns Array of recommended seat positions
+ * @returns Array of recommended seat positions (only window seats)
  */
 export function getRecommendedSeats(scenicSide: 'left' | 'right' | 'both'): string[] {
-  const leftSeats = ['A', 'B'];
-  const rightSeats = ['D', 'E', 'F'];
+  const leftWindowSeat = 'A';  // Left side window seat
+  const rightWindowSeat = 'F'; // Right side window seat
 
   switch (scenicSide) {
     case 'left':
-      return leftSeats;
+      return [leftWindowSeat];
     case 'right':
-      return rightSeats;
+      return [rightWindowSeat];
     case 'both':
-      return [...leftSeats, ...rightSeats];
+      return [leftWindowSeat, rightWindowSeat];
     default:
       return [];
   }
