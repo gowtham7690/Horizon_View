@@ -94,36 +94,48 @@ export default function AirplaneSeats({
     onSelect?.(id);
   };
 
-  // seat visual class helper
-  const seatClass = (s: Seat, recWindow: boolean) => {
-    const base = 'rounded-sm border flex items-center justify-center select-none font-medium';
-    const size = 'w-6 h-6 text-[10px]'; // tight seat size
-    const typeClass = 'bg-slate-800 text-foreground/80 border-slate-700';
-    const scenic = recWindow
-      ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-black border-amber-300 shadow-[0_8px_30px_rgba(251,191,36,0.14)]'
-      : '';
-    const sel = selected === s.id ? 'ring-1 ring-offset-1 ring-sky-500' : '';
-    return `${base} ${size} ${typeClass} ${scenic} ${sel}`;
-  };
+   // seat visual class helper - matching original recommendation design with dark mode
+   const seatClass = (s: Seat, recWindow: boolean) => {
+     const base = 'rounded-lg border-2 flex items-center justify-center select-none font-semibold cursor-pointer transition-all duration-200';
+     const size = 'w-6 h-6 text-[10px]';
+     
+     // Scenic window seat (recommended) - yellow for sun
+     if (recWindow && s.type === 'window') {
+       return `${base} ${size} glow-seat bg-yellow-400 dark:bg-yellow-500 border-yellow-500 dark:border-yellow-400 text-yellow-900 dark:text-yellow-950 shadow-sm`;
+     }
+     
+     // Regular window seat - blue
+     if (s.type === 'window') {
+       return `${base} ${size} bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300`;
+     }
+     
+     // Aisle seat - white
+     if (s.type === 'aisle') {
+       return `${base} ${size} bg-white dark:bg-slate-100 border-slate-300 dark:border-slate-400 text-slate-700 dark:text-slate-800`;
+     }
+     
+     // Middle seat - light and dark mode
+     return `${base} ${size} bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400`;
+   };
 
    // column header labels - centered layout
    const columnHeaders = ['LW', 'C', 'LA', 'RA', 'C', 'RW'];
    const seatLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   return (
-    <div ref={containerRef} className="card-elevated p-3 h-full flex flex-col">
+    <div ref={containerRef} className="card-elevated p-3 h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg dark:shadow-xl">
       {/* Title */}
       <div className="mb-2">
-        <h3 className="text-sm md:text-base font-semibold text-foreground">Aircraft Seating</h3>
-        <p className="text-xs text-foreground/60">Top-view cabin layout (compact)</p>
+        <h3 className="text-sm md:text-base font-semibold bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 bg-clip-text text-transparent">Aircraft Seating</h3>
+        <p className="text-xs text-slate-600 dark:text-slate-400">Top-view cabin layout (compact)</p>
       </div>
 
-      {/* Fuselage container */}
-      <div className="flex-1 min-h-0">
-        <div
-          className="relative w-full h-full rounded-2xl border border-border bg-gradient-to-b from-slate-900/30 to-slate-900/18 p-2"
-          style={{ minHeight: 340 }}
-        >
+       {/* Fuselage container */}
+       <div className="flex-1 min-h-0">
+         <div
+           className="relative w-full h-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/30 p-2 shadow-inner dark:shadow-inner"
+           style={{ minHeight: 340 }}
+         >
            {/* Header row (column labels) — aligned with seat columns, centered */}
            <div
              className="grid justify-center"
@@ -143,7 +155,7 @@ export default function AirplaneSeats({
              {columnHeaders.map((h, idx) => (
                <div 
                  key={`header-${idx}-${h}`} 
-                 className="text-[11px] text-foreground/60 text-center font-medium flex items-center justify-center"
+                 className="text-[11px] text-slate-600 dark:text-slate-400 text-center font-medium flex items-center justify-center"
                  style={{ gridColumn: idx + 2 }}
                >
                  {h}
@@ -156,7 +168,7 @@ export default function AirplaneSeats({
            {/* Seats viewport */}
            <div
              ref={viewportRef}
-             className="mt-1 overflow-auto"
+             className="mt-1 overflow-hidden"
              style={{
                // keep viewport height flexible; ResizeObserver will recalc visibleRows
                maxHeight: `calc(100% - ${HEADER_HEIGHT_PX + FOOTER_HEIGHT_PX}px)`,
@@ -178,12 +190,12 @@ export default function AirplaneSeats({
                {Array.from({ length: visibleRows }, (_, rowIdx) => {
                  const rowNum = rowIdx + 1;
                  const rowSeats = seats.filter(s => s.row === rowNum);
-                 
-                 return (
+
+                  return (
                    <React.Fragment key={`row-${rowNum}`}>
                      {/* Left row number */}
                      <div
-                       className="flex items-center justify-center text-[11px] text-foreground/40"
+                       className="flex items-center justify-center text-[11px] text-slate-600 dark:text-slate-400"
                        style={{ 
                          gridColumn: 1, 
                          gridRow: rowNum,
@@ -210,8 +222,8 @@ export default function AirplaneSeats({
                              gridColumn: colMap[s.letter],
                              gridRow: rowNum,
                            }}
-                           whileHover={{ scale: 1.06 }}
-                           whileTap={{ scale: 0.96 }}
+                           whileHover={{ scale: 1.15, zIndex: 10 }}
+                           whileTap={{ scale: 0.95 }}
                          >
                            <span className="pointer-events-none">{s.letter}</span>
                          </motion.button>
@@ -220,7 +232,7 @@ export default function AirplaneSeats({
                      
                      {/* Right row number */}
                      <div
-                       className="flex items-center justify-center text-[11px] text-foreground/30"
+                       className="flex items-center justify-center text-[11px] text-slate-500 dark:text-slate-500"
                        style={{ 
                          gridColumn: 8, 
                          gridRow: rowNum,
@@ -230,22 +242,35 @@ export default function AirplaneSeats({
                        {rowNum}
                      </div>
                    </React.Fragment>
-                 );
-               })}
-             </div>
-           </div>
-
-          {/* Footer: aisle label + legend */}
-          <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-4" style={{ height: FOOTER_HEIGHT_PX }}>
-            <div className="flex items-center gap-3">
-              <div className="text-[11px] text-foreground/60">AISLE</div>
-              <div className="w-32 h-1 rounded bg-slate-700/30" />
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <LegendDot color="linear-gradient(90deg,#fbbf24,#fb923c)" label="Scenic Window" />
-              <LegendDot color="#64748b" label="Window Seat" />
-              <LegendDot color="#475569" label="Aisle/Middle" />
+           {/* Footer: aisle label + legend */}
+           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4" style={{ height: FOOTER_HEIGHT_PX }}>
+             <div className="flex items-center gap-3">
+               <div className="text-[11px] text-slate-600 dark:text-slate-400">AISLE</div>
+               <div className="w-32 h-1 rounded bg-slate-300 dark:bg-slate-700" />
+          </div>
+
+             <div className="flex items-center gap-3">
+               <div className="flex items-center gap-2">
+                 <div className="w-3 h-3 rounded-sm shadow-sm bg-yellow-400 dark:bg-yellow-500" aria-hidden />
+                 <div className="text-[11px] text-slate-700 dark:text-slate-300">Scenic Window</div>
+               </div>
+               <div className="flex items-center gap-2">
+                 <div className="w-3 h-3 rounded-sm shadow-sm bg-blue-100 dark:bg-blue-900/30" aria-hidden />
+                 <div className="text-[11px] text-slate-700 dark:text-slate-300">Window Seat</div>
+               </div>
+               <div className="flex items-center gap-2">
+                 <div className="w-3 h-3 rounded-sm shadow-sm bg-white dark:bg-slate-100 border border-slate-300 dark:border-slate-400" aria-hidden />
+                 <div className="text-[11px] text-slate-700 dark:text-slate-300">Aisle Seat</div>
+               </div>
+               <div className="flex items-center gap-2">
+                 <div className="w-3 h-3 rounded-sm shadow-sm bg-gray-50 dark:bg-gray-800/50" aria-hidden />
+                 <div className="text-[11px] text-slate-700 dark:text-slate-300">Middle Seat</div>
+               </div>
             </div>
           </div>
         </div>
@@ -254,13 +279,3 @@ export default function AirplaneSeats({
   );
 }
 
-/* Legend helper */
-function LegendDot({ color, label }: { color: string; label: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className="w-3 h-3 rounded-sm shadow-sm" style={{ background: color }} aria-hidden />
-      <div className="text-[11px] text-foreground/70">{label}</div>
-    </div>
-  );
-}
-  

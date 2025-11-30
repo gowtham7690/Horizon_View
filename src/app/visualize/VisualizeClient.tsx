@@ -161,13 +161,24 @@ export default function VisualizeClient({ searchParams }: VisualizeClientProps) 
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-primary/10 to-secondary/10 dark:from-primary/20 dark:to-secondary/20 rounded-lg border-2 border-primary/20 backdrop-blur-sm">
-                <motion.div
-                  className="w-2 h-2 bg-emerald-500 rounded-full"
-                  animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-                <span className="text-xs font-bold text-primary">Live Data</span>
+              <div className="flex flex-col gap-2 px-3 py-2 bg-gradient-to-r from-primary/10 to-secondary/10 dark:from-primary/20 dark:to-secondary/20 rounded-lg border-2 border-primary/20 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="text-[10px] text-foreground/60">Departure</div>
+                    <div className="text-xs font-bold text-foreground">{flightData.departure.code}</div>
+                    <div className="text-[10px] font-semibold text-primary">
+                      {new Date(flightData.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <div className="w-px h-8 bg-primary/30"></div>
+                  <div>
+                    <div className="text-[10px] text-foreground/60">Arrival</div>
+                    <div className="text-xs font-bold text-foreground">{flightData.arrival.code}</div>
+                    <div className="text-[10px] font-semibold text-primary">
+                      {new Date(flightData.arrivalTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

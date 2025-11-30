@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlane } from '@fortawesome/free-solid-svg-icons';
 import { getSunPositionAtFlightProgress } from '@/lib/sun';
 
 interface SunFlightTimelineProps {
@@ -135,36 +137,25 @@ export default function SunFlightTimeline({
             <div className="absolute left-1/2 transform -translate-x-1/2 -top-2.5 bg-foreground/80 text-white text-[9px] px-1.5 py-0.5 rounded font-semibold">
               Horizon
             </div>
-            
-            {/* Airplane on horizon */}
-            <motion.div
-              className="absolute top-1/2 transform -translate-y-1/2 z-30"
-              style={{
-                left: `${currentProgress * 100}%`,
-                transform: 'translate(-50%, -50%)',
-              }}
-            >
-              <motion.svg
-                className="w-7 h-7 text-white drop-shadow-lg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                animate={{
-                  x: [0, 2, 0],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                <path d="M21.59 11.59a2 2 0 0 0-2.82-2.82l-8 8a2 2 0 0 0 0 2.82l8 8a2 2 0 0 0 2.82-2.82L16.41 20l5.18-5.18z" />
-                <path d="M2.41 11.59a2 2 0 0 1 2.82-2.82l8 8a2 2 0 0 1 0 2.82l-8 8a2 2 0 0 1-2.82-2.82L7.59 20l-5.18-5.18z" />
-                <path d="M12 2v20" />
-              </motion.svg>
-            </motion.div>
           </div>
+          
+          {/* Airplane marker on horizon */}
+          <motion.div
+            className="absolute z-30 pointer-events-none"
+            style={{
+              left: `${currentProgress * 100}%`,
+              top: '40%',
+              transform: 'translate(-50%, -50%)'
+            }}
+            animate={{ y: [0, -2, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <FontAwesomeIcon 
+              icon={faPlane} 
+              className="w-14 h-14 text-white drop-shadow-lg " style={{ fontSize: "28px" }} 
+              aria-hidden
+            />
+          </motion.div>
           
           {/* Sun position indicator */}
           {currentSunPos && (
@@ -178,25 +169,33 @@ export default function SunFlightTimeline({
                 scale: currentSunPos.altitude > 0 ? 1.2 : currentSunPos.altitude > -6 ? 1.0 : 0.7,
               }}
             >
-              <motion.svg
-                className="w-8 h-8 text-amber-400 drop-shadow-2xl"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                animate={{
-                  rotate: currentSunPos.altitude > 0 ? [0, 360] : [180, 540],
-                }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              >
+                <motion.svg
+                  className="w-8 h-8 text-amber-400 drop-shadow-2xl"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  animate={{
+                    rotate: currentSunPos.altitude > 0 ? [0, 360] : [180, 540],
+                  }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                >
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
               </motion.svg>
-              {/* Altitude label */}
-              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+              {/* Altitude label - positioned above when near horizon, below when above horizon */}
+              {/* <div 
+                className={`absolute left-1/2 transform -translate-x-1/2 whitespace-nowrap ${
+                  currentSunPos.altitude > 5 ? 'bottom-6' : 'top-6'
+                }`}
+              >
                 <div className="bg-foreground/95 text-white text-[10px] px-2 py-1 rounded shadow-xl font-bold">
                   {Math.round(currentSunPos.altitude)}°
                 </div>
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-3 border-transparent border-t-foreground/95"></div>
-              </div>
+                <div className={`absolute left-1/2 transform -translate-x-1/2 border-3 border-transparent ${
+                  currentSunPos.altitude > 5 
+                    ? 'top-full border-t-foreground/95' 
+                    : 'bottom-full border-b-foreground/95'
+                }`}></div>
+              </div> */}
             </motion.div>
           )}
 

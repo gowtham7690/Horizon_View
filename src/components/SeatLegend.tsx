@@ -61,11 +61,11 @@ export default function SeatLegend({ scenicSide, recommendedSeats }: SeatLegendP
   return (
     <div className="card-elevated p-4 md:p-5 h-full flex flex-col">
       <div className="mb-4">
-        <h3 className="text-base md:text-lg font-bold mb-1 text-foreground">Seat Guide</h3>
+        <h3 className="text-base md:text-lg font-bold mb-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 bg-clip-text text-transparent">Seat Guide</h3>
         <p className="text-[10px] md:text-xs text-foreground/60">Understanding seat types and recommendations</p>
       </div>
 
-      <div className="space-y-4 flex-1 overflow-y-auto">
+      <div className="space-y-4 flex-1 overflow-hidden">
         {legendItems.map((item) => {
           if (item.seats.length === 0) return null;
           
@@ -79,12 +79,12 @@ export default function SeatLegend({ scenicSide, recommendedSeats }: SeatLegendP
               <div className="flex items-start gap-3">
                 <div className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-base flex-shrink-0 shadow-sm ${
                   item.type === 'scenic' 
-                    ? 'glow-seat bg-gradient-to-br from-amber-400 to-orange-500 border-amber-400' 
+                    ? 'glow-seat bg-yellow-400 dark:bg-yellow-500 border-yellow-500 dark:border-yellow-400' 
                     : item.type === 'standard'
                     ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700'
                     : item.type === 'middle'
                     ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600'
-                    : 'bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700'
+                    : 'bg-white dark:bg-slate-100 border-slate-300 dark:border-slate-400'
                 }`}>
                   {item.icon}
                 </div>
@@ -97,7 +97,7 @@ export default function SeatLegend({ scenicSide, recommendedSeats }: SeatLegendP
                         key={seat}
                         className={`px-2 py-1 text-xs font-bold rounded ${
                           item.type === 'scenic'
-                            ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white border-2 border-amber-300 shadow-md'
+                            ? 'bg-yellow-400 dark:bg-yellow-500 text-yellow-900 dark:text-yellow-950 border-2 border-yellow-500 dark:border-yellow-400 shadow-md'
                             : 'bg-foreground/10 text-foreground/70 border-2 border-border'
                         }`}
                       >
