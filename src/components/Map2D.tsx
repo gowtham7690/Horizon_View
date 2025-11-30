@@ -1,23 +1,25 @@
 'use client';
 
-import { ComposableMap, Geographies, Geography, Line, Marker } from 'react-simple-maps';
+import React from 'react';
+import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
 import { motion } from 'framer-motion';
+import { geoMercator } from 'd3-geo';
 
 interface Map2DProps {
   departureLat: number;
   departureLng: number;
   arrivalLat: number;
   arrivalLng: number;
-  path: [number, number][];
+  path: [number, number][]; // array of [lng, lat]
 }
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
 export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalLng, path }: Map2DProps) {
 
-  // Calculate bounding box
+  // Calculate bounding box (same as your existing logic)
   const allPoints = path && path.length > 0 ? path : [[departureLng, departureLat], [arrivalLng, arrivalLat]];
-  
+
   let minLat = Math.min(departureLat, arrivalLat);
   let maxLat = Math.max(departureLat, arrivalLat);
   let minLng = Math.min(departureLng, arrivalLng);
@@ -50,7 +52,7 @@ export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalL
   const paddedLatSpan = latSpan * (1 + padding * 2);
   const paddedLngSpan = effectiveLngSpan * (1 + padding * 2);
   const maxSpan = Math.max(paddedLatSpan, paddedLngSpan);
-  
+
   let scale: number;
   if (maxSpan > 90) {
     scale = Math.max(80, Math.min(200, 150 / (maxSpan / 180)));
@@ -60,6 +62,46 @@ export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalL
     scale = Math.max(200, Math.min(800, 600 / (maxSpan / 45)));
   }
 
+  // ---- Overlay projection settings ----
+  // Use the same width/height used by ComposableMap so projection -> pixels align.
+  const MAP_WIDTH = 1200;
+  const MAP_HEIGHT = 600;
+
+  // Build a d3 geo projection that matches ComposableMap's geoMercator with same scale & center.
+  const projection = geoMercator()
+    .scale(scale as number)
+    .center([centerLng, centerLat])
+    .translate([MAP_WIDTH / 2, MAP_HEIGHT / 2]);
+
+  // Utility to project [lng, lat] -> [x, y] in pixel space for the overlay SVG
+  const projectPoint = (lng: number, lat: number) => {
+    // projection expects [lng, lat]
+    // types tell TS this returns [number, number] but d3 returns [number, number] | null; we assume valid
+    // (the inputs are valid lat/lngs coming from your dataset)
+    const p = projection([lng, lat]) as [number, number];
+    return { x: p[0], y: p[1] };
+  };
+
+  // We'll draw a curve between departure and arrival (first and last in allPoints)
+  const start = allPoints[0];
+  const end = allPoints[allPoints.length - 1];
+
+  const startPx = projectPoint(start[0], start[1]);
+  const endPx = projectPoint(end[0], end[1]);
+
+  // Parabola control point: midpoint raised upward by `curveHeight` (in pixels)
+  // Positive curveHeight -> curve arches upward (towards smaller y because y axis grows downwards in SVG).
+  const defaultCurveHeight = 120; // tweak this to change arc height
+  const curveHeight = defaultCurveHeight;
+
+  const midX = (startPx.x + endPx.x) / 2;
+  const midY = (startPx.y + endPx.y) / 2;
+  const controlX = midX;
+  const controlY = midY - curveHeight; // lift upward
+
+  // Path strings
+  const parabolaD = `M ${startPx.x} ${startPx.y} Q ${controlX} ${controlY} ${endPx.x} ${endPx.y}`;
+  const straightLineD = `M ${startPx.x} ${startPx.y} L ${endPx.x} ${endPx.y}`;
 
   return (
     <div className="card-elevated p-6 md:p-8">
@@ -76,8 +118,8 @@ export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalL
             center: [centerLng, centerLat],
             rotate: crossesDateLine ? [-centerLng, 0, 0] : [0, 0, 0],
           }}
-          width={1200}
-          height={600}
+          width={MAP_WIDTH}
+          height={MAP_HEIGHT}
           style={{
             width: "100%",
             height: "100%",
@@ -103,39 +145,6 @@ export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalL
               ))
             }
           </Geographies>
-
-          {/* Great circle flight path with gradient */}
-          {path.map((point, index) => {
-            if (index === 0) return null;
-            const prevPoint = path[index - 1];
-            return (
-              <Line
-                key={index}
-                from={prevPoint}
-                to={point}
-                stroke="url(#flightGradient)"
-                strokeWidth={4}
-                style={{
-                  filter: 'drop-shadow(0 2px 8px rgba(59, 130, 246, 0.4))',
-                }}
-              />
-            );
-          })}
-          <defs>
-            <linearGradient id="flightGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
-              <stop offset="50%" stopColor="#3b82f6" stopOpacity={1} />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity={1} />
-            </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-
 
           {/* Departure marker */}
           <Marker coordinates={[departureLng, departureLat]}>
@@ -163,9 +172,9 @@ export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalL
               <motion.text
                 textAnchor="middle"
                 y={-20}
-                style={{ 
-                  fontSize: '12px', 
-                  fontWeight: '700', 
+                style={{
+                  fontSize: '12px',
+                  fontWeight: '700',
                   fill: '#10b981',
                   textShadow: '0 1px 3px rgba(255,255,255,0.9)',
                   letterSpacing: '0.5px'
@@ -205,9 +214,9 @@ export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalL
               <motion.text
                 textAnchor="middle"
                 y={-20}
-                style={{ 
-                  fontSize: '12px', 
-                  fontWeight: '700', 
+                style={{
+                  fontSize: '12px',
+                  fontWeight: '700',
                   fill: '#ef4444',
                   textShadow: '0 1px 3px rgba(255,255,255,0.9)',
                   letterSpacing: '0.5px'
@@ -220,7 +229,75 @@ export default function Map2D({ departureLat, departureLng, arrivalLat, arrivalL
               </motion.text>
             </g>
           </Marker>
+
+          {/* NOTE: We are drawing the custom overlay SVG separately below (absolutely positioned),
+              so we DON'T draw the path/line here with react-simple-maps Line component.
+              The overlay ensures pixel-perfect drawing using the same projection. */}
+          <defs>
+            <linearGradient id="flightGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity={1} />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity={1} />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
         </ComposableMap>
+
+        {/* --------- Overlay SVG: draws either straight line OR parabolic curve --------- */}
+        {/* The overlay uses the same viewBox (MAP_WIDTH x MAP_HEIGHT) so it scales the same as the map */}
+        <svg
+          viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none', // so map interactions still work
+          }}
+        >
+          {/* Uncomment one of the options below to choose which path to show.
+              Option A: Straight linear line
+              Option B: Parabolic (quadratic Bézier) curve (upward arch)
+          */}
+
+          {/* ---------- Option A: Straight line (linear) ---------- */}
+          {/* Currently using: Straight linear line */}
+          <line
+            x1={startPx.x}
+            y1={startPx.y}
+            x2={endPx.x}
+            y2={endPx.y}
+            stroke="url(#flightGradient)"
+            strokeWidth={4}
+            strokeLinecap="round"
+            style={{ filter: 'drop-shadow(0 2px 8px rgba(59, 130, 246, 0.4))' }}
+          />
+
+          {/* ---------- Option B: Parabolic curve (quadratic Bézier) ---------- */}
+          {/* To switch back to parabolic curve, uncomment the <path> below and comment out the <line> above */}
+          {/* 
+          <path
+            d={parabolaD}
+            stroke="url(#flightGradient)"
+            strokeWidth={4}
+            fill="none"
+            strokeLinecap="round"
+            style={{ filter: 'drop-shadow(0 2px 8px rgba(59, 130, 246, 0.4))' }}
+          />
+          */}
+
+          {/* optional: small circles at start/end for clarity in overlay (not necessary since markers exist) */}
+          <circle cx={startPx.x} cy={startPx.y} r={4} fill="#10b981" stroke="#fff" strokeWidth={1} />
+          <circle cx={endPx.x} cy={endPx.y} r={4} fill="#ef4444" stroke="#fff" strokeWidth={1} />
+        </svg>
       </div>
 
       {/* Legend */}
