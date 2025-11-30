@@ -200,7 +200,7 @@ export default function SunFlightTimeline({
           )}
 
           {/* Sunrise/Sunset markers */}
-          {sunrisePos && (
+          {/* {sunrisePos && (
             <div 
               className="absolute top-1/2 transform -translate-y-1/2 z-15"
               style={{ left: `${sunrisePos.progress * 100}%` }}
@@ -217,11 +217,11 @@ export default function SunFlightTimeline({
               style={{ left: `${sunsetPos.progress * 100}%` }}
             >
               <div className="w-0.5 h-6 bg-red-500 rounded-full"></div>
-              <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-[9px] font-semibold text-red-600 dark:text-red-400 whitespace-nowrap">
+              <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-[9px] font-semibold text-red-600 dark:text-red-400 whitespace-nowrap">
                 Sunset
               </div>
             </div>
-          )}
+          )} */}
         </div>
         
         {/* Altitude scale */}
