@@ -4,13 +4,13 @@
 
 HorizonView is a modern web application that helps travelers choose the best window seats based on sun position during their flight. Using interactive 2D world maps, real-time sun calculations, and beautiful visualizations, it recommends which side of the aircraft will offer the most scenic views.
 
-![HorizonView](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
+![HorizonView](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8?style=for-the-badge&logo=tailwind-css)
 
 ## ✨ Features
 
-- 🗺️ **Interactive 2D World Map** - Visualize your flight path with animated great-circle routes
+- 🗺️ **Interactive 2D World Map** - Visualize your flight path with linear routes on an interactive Mercator projection map
 - ☀️ **Real-Time Sun Calculations** - Accurate sunrise/sunset times using astronomical formulas
 - 💺 **Smart Seat Recommendations** - Get personalized window seat suggestions (A-F) based on sun position
 - 📊 **Sun Flight Timeline** - Animated timeline showing sun position throughout your journey
@@ -21,7 +21,7 @@ HorizonView is a modern web application that helps travelers choose the best win
 
 ## 🚀 Tech Stack
 
-- **Framework**: Next.js 15 (App Router) + TypeScript
+- **Framework**: Next.js 16 (App Router) + TypeScript
 - **Styling**: Tailwind CSS 4 with custom CSS variables
 - **Maps**: react-simple-maps for 2D world visualization
 - **Sun Calculations**: Custom astronomical formulas + suncalc library
@@ -66,10 +66,10 @@ HorizonView is a modern web application that helps travelers choose the best win
    - Click "Find Scenic Seats"
 
 2. **View Visualizations**
-   - **Flight Path Map**: See your route on an interactive world map
-   - **Seating Chart**: View highlighted scenic window seats
-   - **Sun Timeline**: Watch the sun's position throughout your flight
-   - **Seat Legend**: Understand seat recommendations
+   - **Flight Path Map**: See your route on an interactive world map with animated markers and gradient flight path
+   - **Seating Chart**: View highlighted scenic window seats with visual indicators
+   - **Sun Timeline**: Watch the sun's position throughout your flight with animated timeline
+   - **Seat Legend**: Understand seat recommendations and color coding
 
 3. **Get Recommendations**
    - The app calculates which side (left/right/both) offers the best views
@@ -126,15 +126,18 @@ horizon-view/
 ### Great Circle Path
 - Calculates the shortest path between two points on Earth
 - Uses d3-geo for accurate great-circle interpolation
-- Displays route on interactive Mercator projection map
+- Displays route on interactive Mercator projection map with linear line visualization
+- Supports both linear and parabolic curve rendering (parabolic code preserved for future use)
 
 ## 🎨 Design Features
 
 - **Pastel Sky Theme**: Soft blue-to-orange gradients representing sky colors
-- **Dark Mode**: Dusk/orange gradient for night viewing
-- **Smooth Animations**: Framer Motion transitions throughout
-- **Card-Based UI**: Modern card design with soft shadows
-- **Responsive Layout**: Adapts beautifully to all screen sizes
+- **Dark Mode**: Dusk/orange gradient for night viewing with persistent theme preference
+- **Smooth Animations**: Framer Motion transitions throughout with spring physics
+- **Card-Based UI**: Modern card design with soft shadows and elevation
+- **Responsive Layout**: Adapts beautifully to all screen sizes (mobile, tablet, desktop)
+- **Interactive Map**: Animated markers with pulsing effects and gradient flight paths
+- **Gradient Flight Path**: Color-coded route from green (departure) to red (arrival)
 
 ## 🌍 Supported Airports
 
@@ -174,20 +177,42 @@ Calculate flight data and sun positions.
 {
   "success": true,
   "data": {
-    "departure": { "code": "JFK", "city": "New York", ... },
-    "arrival": { "code": "LAX", "city": "Los Angeles", ... },
+    "departure": {
+      "code": "JFK",
+      "name": "John F. Kennedy International Airport",
+      "city": "New York",
+      "lat": 40.6413,
+      "lng": -73.7781
+    },
+    "arrival": {
+      "code": "LAX",
+      "name": "Los Angeles International Airport",
+      "city": "Los Angeles",
+      "lat": 33.9425,
+      "lng": -118.4081
+    },
     "distance": 3974,
+    "bearing": 270,
     "duration": 5.0,
     "path": [[lng, lat], ...],
     "sunData": {
       "scenicSide": "right",
       "recommendedSeats": ["D", "E", "F"],
       "sunriseTime": "2024-01-01T12:20:06.748Z",
-      "sunsetTime": "2024-01-01T21:39:04.067Z"
-    }
+      "sunsetTime": "2024-01-01T21:39:04.067Z",
+      "departureSunAltitude": 15.5,
+      "arrivalSunAltitude": -5.2
+    },
+    "departureTime": "2024-01-01T10:00:00.000Z",
+    "arrivalTime": "2024-01-01T15:00:00.000Z"
   }
 }
 ```
+
+**Error Responses:**
+- `400`: Missing or invalid parameters
+- `404`: Airport not found
+- `500`: Internal server error
 
 ## 🤝 Contributing
 
@@ -207,8 +232,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - [suncalc](https://github.com/mourner/suncalc) - Sun position calculations
 - [react-simple-maps](https://www.react-simple-maps.io/) - Map visualization
-- [d3-geo](https://github.com/d3/d3-geo) - Geographic calculations
+- [d3-geo](https://github.com/d3/d3-geo) - Geographic calculations and projections
 - [Framer Motion](https://www.framer.com/motion/) - Animation library
+- [date-fns](https://date-fns.org/) - Date manipulation utilities
+- [tz-lookup](https://github.com/darkskyapp/tz-lookup-oss) - Timezone lookup
 
 ## 📧 Contact
 
