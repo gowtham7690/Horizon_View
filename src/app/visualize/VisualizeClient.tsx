@@ -88,10 +88,10 @@ export default function VisualizeClient({ searchParams }: VisualizeClientProps) 
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1920px] mx-auto">
         {/* Header */}
         <motion.div
-          className="mb-8"
+          className="mb-6 lg:mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -118,95 +118,96 @@ export default function VisualizeClient({ searchParams }: VisualizeClientProps) 
             <span className="font-medium">Back to Search</span>
           </Link>
           
-          <div className="card-elevated p-8 md:p-10 bg-gradient-to-br from-blue-50/80 via-cyan-50/60 to-sky-50/80 dark:from-slate-800/80 dark:via-slate-900/60 dark:to-slate-800/80 backdrop-blur-sm">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="card-elevated p-4 md:p-5 lg:p-6 bg-gradient-to-br from-blue-50/80 via-cyan-50/60 to-sky-50/80 dark:from-slate-800/80 dark:via-slate-900/60 dark:to-slate-800/80 backdrop-blur-sm">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex-1">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3 bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
                   {flightData.departure.city} → {flightData.arrival.city}
                 </h1>
-                <div className="flex flex-wrap items-center gap-6 text-base md:text-lg text-foreground/80">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex flex-wrap items-center gap-4 text-sm md:text-base text-foreground/80">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
                     <div>
-                      <div className="text-xs text-foreground/60">Date</div>
-                      <div className="font-bold">{new Date(flightData.departureTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+                      <div className="text-[10px] text-foreground/60">Date</div>
+                      <div className="font-bold text-sm">{new Date(flightData.departureTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     </div>
                     <div>
-                      <div className="text-xs text-foreground/60">Distance</div>
-                      <div className="font-bold">{flightData.distance.toLocaleString()} km</div>
+                      <div className="text-[10px] text-foreground/60">Distance</div>
+                      <div className="font-bold text-sm">{flightData.distance.toLocaleString()} km</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div>
-                      <div className="text-xs text-foreground/60">Duration</div>
-                      <div className="font-bold">{flightData.duration} hours</div>
+                      <div className="text-[10px] text-foreground/60">Duration</div>
+                      <div className="font-bold text-sm">{flightData.duration} hours</div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-primary/10 to-secondary/10 dark:from-primary/20 dark:to-secondary/20 rounded-xl border-2 border-primary/20 backdrop-blur-sm">
+              <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-primary/10 to-secondary/10 dark:from-primary/20 dark:to-secondary/20 rounded-lg border-2 border-primary/20 backdrop-blur-sm">
                 <motion.div
-                  className="w-3 h-3 bg-emerald-500 rounded-full"
+                  className="w-2 h-2 bg-emerald-500 rounded-full"
                   animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
-                <span className="text-sm font-bold text-primary">Live Data</span>
+                <span className="text-xs font-bold text-primary">Live Data</span>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Premium Two-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-6 lg:mb-8">
+        {/* Premium Two-Column Layout - 65/35 split */}
+        <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-4 lg:gap-6 mb-4 lg:mb-6">
           {/* Left Column: Flight Summary, Map, Sun Timeline */}
-          <div className="space-y-6 lg:space-y-8">
+          <div className="space-y-4 lg:space-y-5">
             {/* Flight Summary Card */}
             <motion.div
-              className="card-elevated p-6"
+              className="card-elevated p-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <h3 className="text-xl font-bold mb-4 text-foreground">Quick Summary</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <h3 className="text-base font-bold mb-3 text-foreground">Quick Summary</h3>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <div className="text-xs text-foreground/60 mb-1">Distance</div>
-                  <div className="text-2xl font-bold text-foreground">{flightData.distance.toLocaleString()} km</div>
+                  <div className="text-[10px] text-foreground/60 mb-1">Distance</div>
+                  <div className="text-lg font-bold text-foreground">{flightData.distance.toLocaleString()} km</div>
                 </div>
                 <div>
-                  <div className="text-xs text-foreground/60 mb-1">Duration</div>
-                  <div className="text-2xl font-bold text-foreground">{flightData.duration} hrs</div>
+                  <div className="text-[10px] text-foreground/60 mb-1">Duration</div>
+                  <div className="text-lg font-bold text-foreground">{flightData.duration} hrs</div>
                 </div>
                 <div>
-                  <div className="text-xs text-foreground/60 mb-1">Bearing</div>
-                  <div className="text-2xl font-bold text-foreground">{flightData.bearing}°</div>
+                  <div className="text-[10px] text-foreground/60 mb-1">Bearing</div>
+                  <div className="text-lg font-bold text-foreground">{flightData.bearing}°</div>
                 </div>
                 <div>
-                  <div className="text-xs text-foreground/60 mb-1">Best Side</div>
-                  <div className="text-2xl font-bold text-primary">{flightData.sunData.scenicSide.toUpperCase()}</div>
+                  <div className="text-[10px] text-foreground/60 mb-1">Best Side</div>
+                  <div className="text-lg font-bold text-primary">{flightData.sunData.scenicSide.toUpperCase()}</div>
                 </div>
               </div>
             </motion.div>
 
-            {/* Map */}
+            {/* Map - Fixed Height to Fit Screen */}
             <motion.div
+              className="w-full h-[700px]"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
@@ -237,9 +238,10 @@ export default function VisualizeClient({ searchParams }: VisualizeClientProps) 
           </div>
 
           {/* Right Column: Aircraft Seating, Seat Guide */}
-          <div className="space-y-6 lg:space-y-8">
-            {/* Aircraft Seating */}
+          <div className="space-y-4 lg:space-y-5">
+            {/* Aircraft Seating - Fixed Height in Pixels */}
             <motion.div
+              className="w-full h-[900px]"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
