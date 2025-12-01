@@ -117,7 +117,7 @@ export default function VisualizeClient({ searchParams }: VisualizeClientProps) 
             </motion.svg>
             <span className="font-medium">Back to Search</span>
           </Link>
-          
+
           <div className="card-elevated p-4 md:p-5 lg:p-6 bg-gradient-to-br from-blue-50/80 via-cyan-50/60 to-sky-50/80 dark:from-slate-800/80 dark:via-slate-900/60 dark:to-slate-800/80 backdrop-blur-sm">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex-1">
@@ -244,6 +244,10 @@ export default function VisualizeClient({ searchParams }: VisualizeClientProps) 
                 flightDuration={flightData.duration}
                 path={flightData.path}
                 scenicSide={flightData.sunData.scenicSide}
+                departureLat={flightData.departure.lat}
+                departureLng={flightData.departure.lng}
+                arrivalLat={flightData.arrival.lat}
+                arrivalLng={flightData.arrival.lng}
               />
             </motion.div>
           </div>
@@ -293,11 +297,11 @@ export default function VisualizeClient({ searchParams }: VisualizeClientProps) 
               </div>
               <div className="font-bold text-lg mb-1 text-foreground">{flightData.departure.city}</div>
               <div className="text-sm text-foreground/60 mb-2">{flightData.departure.name}</div>
-              <div className="text-sm font-medium text-foreground/80">{new Date(flightData.departureTime).toLocaleString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                hour: '2-digit', 
-                minute: '2-digit' 
+              <div className="text-sm font-medium text-foreground/80">{new Date(flightData.departureTime).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
               })}</div>
             </div>
             <div className="p-4 rounded-lg bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-900/20 dark:to-red-800/10 border border-red-200 dark:border-red-800">
@@ -307,11 +311,11 @@ export default function VisualizeClient({ searchParams }: VisualizeClientProps) 
               </div>
               <div className="font-bold text-lg mb-1 text-foreground">{flightData.arrival.city}</div>
               <div className="text-sm text-foreground/60 mb-2">{flightData.arrival.name}</div>
-              <div className="text-sm font-medium text-foreground/80">{new Date(flightData.arrivalTime).toLocaleString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                hour: '2-digit', 
-                minute: '2-digit' 
+              <div className="text-sm font-medium text-foreground/80">{new Date(flightData.arrivalTime).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
               })}</div>
             </div>
             <div className="p-4 rounded-lg bg-gradient-to-br from-amber-50 to-orange-100/50 dark:from-amber-900/20 dark:to-orange-800/10 border border-amber-200 dark:border-amber-800">

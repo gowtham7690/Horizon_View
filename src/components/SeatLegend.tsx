@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 
 interface SeatLegendProps {
-  scenicSide: 'left' | 'right' | 'both';
+  scenicSide: 'left' | 'right' | 'both' | 'none';
   recommendedSeats: string[];
 }
 
@@ -23,8 +23,8 @@ export default function SeatLegend({ scenicSide, recommendedSeats }: SeatLegendP
     },
     {
       type: 'standard',
-      label: 'Other Window Seats',
-      description: 'Window seats but not optimal for sun viewing',
+      label: 'Standard Window Seat',
+      description: 'Window view, but sun may not be visible',
       icon: '🪟',
       seats: standardWindowSeats,
     },
@@ -47,13 +47,15 @@ export default function SeatLegend({ scenicSide, recommendedSeats }: SeatLegendP
   const getScenicSideDescription = () => {
     const hasLeftScenic = recommendedSeats.includes('A');
     const hasRightScenic = recommendedSeats.includes('F');
-    
+
     if (hasLeftScenic && hasRightScenic) {
       return 'Both window seats (A and F) offer excellent sunrise/sunset views throughout the flight';
     } else if (hasLeftScenic) {
       return 'Left window seat (A) offers the best sunrise/sunset views during this flight';
     } else if (hasRightScenic) {
       return 'Right window seat (F) offers the best sunrise/sunset views during this flight';
+    } else if (scenicSide === 'none') {
+      return 'Sun is not visible during this flight (Night Flight). Any window seat is fine for city lights.';
     }
     return 'Window seats available but sun may not be optimally positioned during flight time';
   };
@@ -68,7 +70,7 @@ export default function SeatLegend({ scenicSide, recommendedSeats }: SeatLegendP
       <div className="space-y-4 flex-1 overflow-hidden">
         {legendItems.map((item) => {
           if (item.seats.length === 0) return null;
-          
+
           return (
             <motion.div
               key={item.type}
@@ -77,15 +79,14 @@ export default function SeatLegend({ scenicSide, recommendedSeats }: SeatLegendP
               transition={{ duration: 0.2 }}
             >
               <div className="flex items-start gap-3">
-                <div className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-base flex-shrink-0 shadow-sm ${
-                  item.type === 'scenic' 
-                    ? 'glow-seat bg-yellow-400 dark:bg-yellow-500 border-yellow-500 dark:border-yellow-400' 
-                    : item.type === 'standard'
-                    ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700'
+                <div className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center text-base flex-shrink-0 shadow-sm ${item.type === 'scenic'
+                  ? 'glow-seat bg-yellow-400 dark:bg-yellow-500 border-yellow-500 dark:border-yellow-400'
+                  : item.type === 'standard'
+                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400'
                     : item.type === 'middle'
-                    ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600'
-                    : 'bg-white dark:bg-slate-100 border-slate-300 dark:border-slate-400'
-                }`}>
+                      ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600'
+                      : 'bg-white dark:bg-slate-100 border-white dark:border-white shadow-sm'
+                  }`}>
                   {item.icon}
                 </div>
                 <div className="flex-1">
@@ -95,11 +96,14 @@ export default function SeatLegend({ scenicSide, recommendedSeats }: SeatLegendP
                     {item.seats.map((seat) => (
                       <span
                         key={seat}
-                        className={`px-2 py-1 text-xs font-bold rounded ${
-                          item.type === 'scenic'
-                            ? 'bg-yellow-400 dark:bg-yellow-500 text-yellow-900 dark:text-yellow-950 border-2 border-yellow-500 dark:border-yellow-400 shadow-md'
-                            : 'bg-foreground/10 text-foreground/70 border-2 border-border'
-                        }`}
+                        className={`px-2 py-1 text-xs font-bold rounded ${item.type === 'scenic'
+                          ? 'bg-yellow-400 dark:bg-yellow-500 text-yellow-900 dark:text-yellow-950 border-2 border-yellow-500 dark:border-yellow-400 shadow-md'
+                          : item.type === 'standard'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-2 border-blue-500 dark:border-blue-400'
+                            : item.type === 'aisle'
+                              ? 'bg-transparent dark:bg-transparent text-slate-700 dark:text-slate-300 border-2 border-white dark:border-white shadow-sm'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-2 border-slate-200 dark:border-slate-700'
+                          }`}
                       >
                         {seat}
                       </span>

@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion';
 
 interface AirplaneSeatsProps {
-  scenicSide: 'left' | 'right' | 'both';
+  scenicSide: 'left' | 'right' | 'both' | 'none';
   recommendedSeats: string[]; // accepts 'A','F' or '12A' forms
   rows?: number; // minimum rows (defaults to 20)
   onSelect?: (seatId: string) => void;
@@ -94,33 +94,33 @@ export default function AirplaneSeats({
     onSelect?.(id);
   };
 
-   // seat visual class helper - matching original recommendation design with dark mode
-   const seatClass = (s: Seat, recWindow: boolean) => {
-     const base = 'rounded-lg border-2 flex items-center justify-center select-none font-semibold cursor-pointer transition-all duration-200';
-     const size = 'w-6 h-6 text-[10px]';
-     
-     // Scenic window seat (recommended) - yellow for sun
-     if (recWindow && s.type === 'window') {
-       return `${base} ${size} glow-seat bg-yellow-400 dark:bg-yellow-500 border-yellow-500 dark:border-yellow-400 text-yellow-900 dark:text-yellow-950 shadow-sm`;
-     }
-     
-     // Regular window seat - blue
-     if (s.type === 'window') {
-       return `${base} ${size} bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300`;
-     }
-     
-     // Aisle seat - white
-     if (s.type === 'aisle') {
-       return `${base} ${size} bg-white dark:bg-slate-100 border-slate-300 dark:border-slate-400 text-slate-700 dark:text-slate-800`;
-     }
-     
-     // Middle seat - light and dark mode
-     return `${base} ${size} bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400`;
-   };
+  // seat visual class helper - matching original recommendation design with dark mode
+  const seatClass = (s: Seat, recWindow: boolean) => {
+    const base = 'rounded-lg border-2 flex items-center justify-center select-none font-semibold cursor-pointer transition-all duration-200';
+    const size = 'w-6 h-6 text-[10px]';
 
-   // column header labels - centered layout
-   const columnHeaders = ['LW', 'C', 'LA', 'RA', 'C', 'RW'];
-   const seatLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+    // Scenic window seat (recommended) - yellow for sun
+    if (recWindow && s.type === 'window') {
+      return `${base} ${size} glow-seat bg-yellow-400 dark:bg-yellow-500 border-yellow-500 dark:border-yellow-400 text-yellow-900 dark:text-yellow-950 shadow-sm`;
+    }
+
+    // Regular window seat - blue border
+    if (s.type === 'window') {
+      return `${base} ${size} bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300`;
+    }
+
+    // Aisle seat - white border only
+    if (s.type === 'aisle') {
+      return `${base} ${size} bg-transparent dark:bg-transparent border-white dark:border-white text-slate-700 dark:text-slate-300 shadow-sm`;
+    }
+
+    // Middle seat - light and dark mode
+    return `${base} ${size} bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400`;
+  };
+
+  // column header labels - centered layout
+  const columnHeaders = ['LW', 'C', 'LA', 'RA', 'C', 'RW'];
+  const seatLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   return (
     <div ref={containerRef} className="card-elevated p-3 h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg dark:shadow-xl">
@@ -130,147 +130,147 @@ export default function AirplaneSeats({
         <p className="text-xs text-slate-600 dark:text-slate-400">Top-view cabin layout (compact)</p>
       </div>
 
-       {/* Fuselage container */}
-       <div className="flex-1 min-h-0">
-         <div
-           className="relative w-full h-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/30 p-2 shadow-inner dark:shadow-inner"
-           style={{ minHeight: 340 }}
-         >
-           {/* Header row (column labels) — aligned with seat columns, centered */}
-           <div
-             className="grid justify-center"
-             style={{
-               gridTemplateColumns: `48px repeat(6, minmax(40px, 40px)) 48px`,
-               gridAutoRows: `${ROW_HEIGHT_PX}px`,
-               alignItems: 'center',
-               height: HEADER_HEIGHT_PX,
-               columnGap: 6,
-               maxWidth: '100%',
-               margin: '0 auto',
-             }}
-           >
-             {/* left blank for row numbers */}
-             <div />
-             {/* six headers - each in its own column to match seats, centered */}
-             {columnHeaders.map((h, idx) => (
-               <div 
-                 key={`header-${idx}-${h}`} 
-                 className="text-[11px] text-slate-600 dark:text-slate-400 text-center font-medium flex items-center justify-center"
-                 style={{ gridColumn: idx + 2 }}
-               >
-                 {h}
-               </div>
-             ))}
-             {/* right blank */}
-             <div style={{ gridColumn: 8 }} />
-           </div>
-
-           {/* Seats viewport */}
-           <div
-             ref={viewportRef}
-             className="mt-1 overflow-hidden"
-             style={{
-               // keep viewport height flexible; ResizeObserver will recalc visibleRows
-               maxHeight: `calc(100% - ${HEADER_HEIGHT_PX + FOOTER_HEIGHT_PX}px)`,
-             }}
-           >
-             {/* grid of row numbers + seats + row numbers — properly arranged */}
-             <div
-               className="grid"
-               style={{
-                 gridTemplateColumns: `48px repeat(6, minmax(40px, 40px)) 48px`,
-                 gridAutoRows: `${ROW_HEIGHT_PX}px`,
-                 rowGap: 4,
-                 columnGap: 6,
-                 justifyContent: 'center',
-                 alignItems: 'center',
-               }}
-             >
-               {/* Render each row properly */}
-               {Array.from({ length: visibleRows }, (_, rowIdx) => {
-                 const rowNum = rowIdx + 1;
-                 const rowSeats = seats.filter(s => s.row === rowNum);
-
-                  return (
-                   <React.Fragment key={`row-${rowNum}`}>
-                     {/* Left row number */}
-                     <div
-                       className="flex items-center justify-center text-[11px] text-slate-600 dark:text-slate-400"
-                       style={{ 
-                         gridColumn: 1, 
-                         gridRow: rowNum,
-                         height: ROW_HEIGHT_PX 
-                       }}
-                     >
-                       {rowNum}
-                     </div>
-                     
-                     {/* Seats in this row: A, B, C, D, E, F */}
-                     {rowSeats.map((s) => {
-                       const colMap: Record<string, number> = { 'A': 2, 'B': 3, 'C': 4, 'D': 5, 'E': 6, 'F': 7 };
-                       return (
-                         <motion.button
-                           key={s.id}
-                           onMouseEnter={() => setHovered(s.id)}
-                           onMouseLeave={() => setHovered(null)}
-                           onFocus={() => setHovered(s.id)}
-                           onBlur={() => setHovered(null)}
-                           onClick={() => handleSelect(s.id)}
-                           className={seatClass(s, isRecommended(s) && s.type === 'window')}
-                           aria-label={`${s.id} ${s.type} seat ${isRecommended(s) && s.type === 'window' ? 'scenic' : ''}`}
-                           style={{
-                             gridColumn: colMap[s.letter],
-                             gridRow: rowNum,
-                           }}
-                           whileHover={{ scale: 1.15, zIndex: 10 }}
-                           whileTap={{ scale: 0.95 }}
-                         >
-                           <span className="pointer-events-none">{s.letter}</span>
-                         </motion.button>
-                       );
-                     })}
-                     
-                     {/* Right row number */}
-                     <div
-                       className="flex items-center justify-center text-[11px] text-slate-500 dark:text-slate-500"
-                       style={{ 
-                         gridColumn: 8, 
-                         gridRow: rowNum,
-                         height: ROW_HEIGHT_PX 
-                       }}
-                     >
-                       {rowNum}
-                     </div>
-                   </React.Fragment>
-                  );
-                })}
+      {/* Fuselage container */}
+      <div className="flex-1 min-h-0">
+        <div
+          className="relative w-full h-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/30 p-2 shadow-inner dark:shadow-inner"
+          style={{ minHeight: 340 }}
+        >
+          {/* Header row (column labels) — aligned with seat columns, centered */}
+          <div
+            className="grid justify-center"
+            style={{
+              gridTemplateColumns: `48px repeat(6, minmax(40px, 40px)) 48px`,
+              gridAutoRows: `${ROW_HEIGHT_PX}px`,
+              alignItems: 'center',
+              height: HEADER_HEIGHT_PX,
+              columnGap: 6,
+              maxWidth: '100%',
+              margin: '0 auto',
+            }}
+          >
+            {/* left blank for row numbers */}
+            <div />
+            {/* six headers - each in its own column to match seats, centered */}
+            {columnHeaders.map((h, idx) => (
+              <div
+                key={`header-${idx}-${h}`}
+                className="text-[11px] text-slate-600 dark:text-slate-400 text-center font-medium flex items-center justify-center"
+                style={{ gridColumn: idx + 2 }}
+              >
+                {h}
               </div>
-            </div>
-
-           {/* Footer: aisle label + legend */}
-           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4" style={{ height: FOOTER_HEIGHT_PX }}>
-             <div className="flex items-center gap-3">
-               <div className="text-[11px] text-slate-600 dark:text-slate-400">AISLE</div>
-               <div className="w-32 h-1 rounded bg-slate-300 dark:bg-slate-700" />
+            ))}
+            {/* right blank */}
+            <div style={{ gridColumn: 8 }} />
           </div>
 
-             <div className="flex items-center gap-3">
-               <div className="flex items-center gap-2">
-                 <div className="w-3 h-3 rounded-sm shadow-sm bg-yellow-400 dark:bg-yellow-500" aria-hidden />
-                 <div className="text-[11px] text-slate-700 dark:text-slate-300">Scenic Window</div>
-               </div>
-               <div className="flex items-center gap-2">
-                 <div className="w-3 h-3 rounded-sm shadow-sm bg-blue-100 dark:bg-blue-900/30" aria-hidden />
-                 <div className="text-[11px] text-slate-700 dark:text-slate-300">Window Seat</div>
-               </div>
-               <div className="flex items-center gap-2">
-                 <div className="w-3 h-3 rounded-sm shadow-sm bg-white dark:bg-slate-100 border border-slate-300 dark:border-slate-400" aria-hidden />
-                 <div className="text-[11px] text-slate-700 dark:text-slate-300">Aisle Seat</div>
-               </div>
-               <div className="flex items-center gap-2">
-                 <div className="w-3 h-3 rounded-sm shadow-sm bg-gray-50 dark:bg-gray-800/50" aria-hidden />
-                 <div className="text-[11px] text-slate-700 dark:text-slate-300">Middle Seat</div>
-               </div>
+          {/* Seats viewport */}
+          <div
+            ref={viewportRef}
+            className="mt-1 overflow-hidden"
+            style={{
+              // keep viewport height flexible; ResizeObserver will recalc visibleRows
+              maxHeight: `calc(100% - ${HEADER_HEIGHT_PX + FOOTER_HEIGHT_PX}px)`,
+            }}
+          >
+            {/* grid of row numbers + seats + row numbers — properly arranged */}
+            <div
+              className="grid"
+              style={{
+                gridTemplateColumns: `48px repeat(6, minmax(40px, 40px)) 48px`,
+                gridAutoRows: `${ROW_HEIGHT_PX}px`,
+                rowGap: 4,
+                columnGap: 6,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              {/* Render each row properly */}
+              {Array.from({ length: visibleRows }, (_, rowIdx) => {
+                const rowNum = rowIdx + 1;
+                const rowSeats = seats.filter(s => s.row === rowNum);
+
+                return (
+                  <React.Fragment key={`row-${rowNum}`}>
+                    {/* Left row number */}
+                    <div
+                      className="flex items-center justify-center text-[11px] text-slate-600 dark:text-slate-400"
+                      style={{
+                        gridColumn: 1,
+                        gridRow: rowNum,
+                        height: ROW_HEIGHT_PX
+                      }}
+                    >
+                      {rowNum}
+                    </div>
+
+                    {/* Seats in this row: A, B, C, D, E, F */}
+                    {rowSeats.map((s) => {
+                      const colMap: Record<string, number> = { 'A': 2, 'B': 3, 'C': 4, 'D': 5, 'E': 6, 'F': 7 };
+                      return (
+                        <motion.button
+                          key={s.id}
+                          onMouseEnter={() => setHovered(s.id)}
+                          onMouseLeave={() => setHovered(null)}
+                          onFocus={() => setHovered(s.id)}
+                          onBlur={() => setHovered(null)}
+                          onClick={() => handleSelect(s.id)}
+                          className={seatClass(s, isRecommended(s) && s.type === 'window')}
+                          aria-label={`${s.id} ${s.type} seat ${isRecommended(s) && s.type === 'window' ? 'scenic' : ''}`}
+                          style={{
+                            gridColumn: colMap[s.letter],
+                            gridRow: rowNum,
+                          }}
+                          whileHover={{ scale: 1.15, zIndex: 10 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <span className="pointer-events-none">{s.letter}</span>
+                        </motion.button>
+                      );
+                    })}
+
+                    {/* Right row number */}
+                    <div
+                      className="flex items-center justify-center text-[11px] text-slate-500 dark:text-slate-500"
+                      style={{
+                        gridColumn: 8,
+                        gridRow: rowNum,
+                        height: ROW_HEIGHT_PX
+                      }}
+                    >
+                      {rowNum}
+                    </div>
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Footer: aisle label + legend */}
+          <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4" style={{ height: FOOTER_HEIGHT_PX }}>
+            <div className="flex items-center gap-3">
+              <div className="text-[11px] text-slate-600 dark:text-slate-400">AISLE</div>
+              <div className="w-32 h-1 rounded bg-slate-300 dark:bg-slate-700" />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-sm shadow-sm bg-yellow-400 dark:bg-yellow-500" aria-hidden />
+                <div className="text-[11px] text-slate-700 dark:text-slate-300">Scenic Window</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-sm shadow-sm bg-blue-50 dark:bg-blue-900/20 border border-blue-500 dark:border-blue-400" aria-hidden />
+                <div className="text-[11px] text-slate-700 dark:text-slate-300">Window Seat</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-sm shadow-sm bg-transparent dark:bg-transparent border border-white dark:border-white" aria-hidden />
+                <div className="text-[11px] text-slate-700 dark:text-slate-300">Aisle Seat</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-sm shadow-sm bg-gray-50 dark:bg-gray-800/50" aria-hidden />
+                <div className="text-[11px] text-slate-700 dark:text-slate-300">Middle Seat</div>
+              </div>
             </div>
           </div>
         </div>
