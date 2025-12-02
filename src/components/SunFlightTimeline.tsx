@@ -218,60 +218,98 @@ export default function SunFlightTimeline({
           </p>
         </div>
 
-        <div className="relative h-40 rounded-lg overflow-hidden bg-gradient-to-b from-blue-200 via-amber-100 to-blue-200 dark:from-blue-900/40 dark:via-amber-900/30 dark:to-blue-900/40 border-2 border-border/50">
+        <div className="relative h-40 rounded-lg overflow-hidden border-2 border-border/50 isolate">
+          {/* Background Layers for Smooth Transitions */}
+          <motion.div
+            className="absolute inset-0 z-0"
+            style={{ background: 'linear-gradient(to bottom, #0f172a, #1e293b)' }} // Night
+            animate={{ opacity: !sunPosition.visible ? 1 : 0 }}
+            transition={{ duration: 1 }}
+          />
+          <motion.div
+            className="absolute inset-0 z-0"
+            style={{ background: 'linear-gradient(to bottom, #3b0764, #f97316, #fde047)' }} // Sunset
+            animate={{ opacity: sunPosition.visible && sunPosition.altitude <= 6 ? 1 : 0 }}
+            transition={{ duration: 1 }}
+          />
+          <motion.div
+            className="absolute inset-0 z-0"
+            style={{ background: 'linear-gradient(to bottom, #3b82f6, #60a5fa, #93c5fd)' }} // Day
+            animate={{ opacity: sunPosition.altitude > 6 ? 1 : 0 }}
+            transition={{ duration: 1 }}
+          />
+
           {/* Left/Right labels */}
-          <div className="absolute top-2 left-2 text-[10px] font-bold text-foreground/70 bg-white/90 dark:bg-black/70 px-2 py-1 rounded shadow-sm">
-            Left Side
+          <div className="absolute top-2 left-2 text-[10px] font-bold text-foreground/70 bg-white/90 dark:bg-black/70 px-2 py-1 rounded shadow-sm z-10">
+            Left Windows
           </div>
-          <div className="absolute bottom-2 left-2 text-[10px] font-bold text-foreground/70 bg-white/90 dark:bg-black/70 px-2 py-1 rounded shadow-sm">
-            Right Side
+          <div className="absolute bottom-2 left-2 text-[10px] font-bold text-foreground/70 bg-white/90 dark:bg-black/70 px-2 py-1 rounded shadow-sm z-10">
+            Right Windows
           </div>
 
           {/* Start/End */}
-          <div className="absolute top-1/2 left-2 -translate-y-1/2 text-[9px] font-semibold text-foreground/50">
-            Start
+          <div className="absolute top-1/2 left-2 -translate-y-1/2 text-[9px] font-semibold text-foreground/50 z-10">
+            Rear
           </div>
-          <div className="absolute top-1/2 right-2 -translate-y-1/2 text-[9px] font-semibold text-foreground/50">
-            End
+          <div className="absolute top-1/2 right-2 -translate-y-1/2 text-[9px] font-semibold text-foreground/50 z-10">
+            Rear
           </div>
 
           {/* Middle line */}
           <div className="absolute top-1/2 left-0 right-0 h-0.5 border-t-2 border-dashed border-foreground/20 z-10" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/80 dark:bg-black/80 px-1 rounded text-[8px] font-bold text-foreground/60 z-10">
+            Front of Plane
+          </div>
 
           {/* Airplane marker */}
           <motion.div
             className="absolute z-30 pointer-events-none"
-            style={{
-              left: `${sliderProgress * 100}%`,
-              top: '40%',
-              transform: 'translate(-50%, -50%)',
+            animate={{
+              left: `${sliderProgress * 100}%`
             }}
-            animate={{ y: [0, -2, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            style={{
+              top: '50%',
+              x: '-50%',
+              y: '-50%',
+            }}
+            transition={{
+              left: { type: "spring", stiffness: 100, damping: 20 }
+            }}
           >
-            <FontAwesomeIcon
-              icon={faPlane}
-              className="w-6 h-6 text-foreground drop-shadow-lg"
-              style={{ fontSize: '24px' }}
-              aria-hidden
-            />
+            <motion.div
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <FontAwesomeIcon
+                icon={faPlane}
+                className="w-6 h-6 text-foreground drop-shadow-lg"
+                style={{ fontSize: '24px' }}
+                aria-hidden
+              />
+            </motion.div>
           </motion.div>
 
           {/* Sun marker - only show when above horizon */}
           {sunPosition.visible && (
             <motion.div
               className="absolute z-20"
-              style={{
+              initial={false}
+              animate={{
                 left: `${sunPosition.x}%`,
                 top: `${sunPosition.y}%`,
-                transform: 'translate(-50%, -50%)',
-                // Opacity based on altitude: full at >10°, dim at 0°, very dim at -6°
                 opacity: sunPosition.altitude > 10 ? 1 :
                   sunPosition.altitude > 0 ? 0.7 :
                     sunPosition.altitude > -6 ? 0.4 : 0.2,
               }}
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              style={{
+                x: '-50%',
+                y: '-50%',
+              }}
+              transition={{
+                left: { type: "spring", stiffness: 200, damping: 30 },
+                top: { type: "spring", stiffness: 200, damping: 30 },
+                opacity: { duration: 0.5 }
+              }}
             >
               <motion.div
                 animate={{ rotate: [0, 360] }}
@@ -291,7 +329,7 @@ export default function SunFlightTimeline({
 
           {/* Progress fill */}
           <div
-            className="absolute bottom-0 left-0 h-1 bg-primary/50 transition-all duration-300"
+            className="absolute bottom-0 left-0 h-1 bg-primary/50 transition-all duration-300 z-10"
             style={{ width: `${sliderProgress * 100}%` }}
           />
         </div>
@@ -353,23 +391,43 @@ export default function SunFlightTimeline({
             />
           </svg>
           <div className="text-sm font-bold text-primary">
-            Best Seats: {labelForScenicSide()}
+            Current View: {
+              !sunPosition.visible ? 'Night View' :
+                sunPosition.altitude <= 6 ? 'Sunset / Sunrise' :
+                  'Daylight'
+            }
           </div>
         </div>
         <div className="text-xs text-foreground/80 leading-relaxed">
-          {scenicSide === 'left' &&
-            'Choose a left window seat (A) for the strongest sun views along the route.'}
-          {scenicSide === 'right' &&
-            'Choose a right window seat (F) to keep the sun on your side of the aircraft.'}
-          {scenicSide === 'both' &&
-            'Both window sides (A and F) will give you good sun exposure at different phases of the flight.'}
-          {scenicSide === 'none' &&
-            'The sun is not visible during this flight. Any window seat is fine for night views.'}
-          {recommendedSeats && recommendedSeats.length > 0 && (
-            <span className="block mt-1">
-              Suggested seat letters: {seatsText}
-            </span>
-          )}
+          <p className="font-semibold mb-1">
+            Sun Position: {
+              !sunPosition.visible ? 'Below Horizon' :
+                (
+                  <>
+                    {sunPosition.y < 25 ? 'Behind Left' :
+                      sunPosition.y < 50 ? 'Ahead Left' :
+                        sunPosition.y < 75 ? 'Ahead Right' :
+                          'Behind Right'}
+                    <span className="font-normal opacity-75">
+                      {' ('}
+                      {sunPosition.altitude > 45 ? 'High in Sky' :
+                        sunPosition.altitude > 15 ? 'Mid Sky' :
+                          'Low on Horizon'}
+                      {')'}
+                    </span>
+                  </>
+                )
+            }
+          </p>
+          <p className="opacity-80">
+            {
+              !sunPosition.visible
+                ? 'The sun is below the horizon, so seat choice matters less for sun views.'
+                : sunPosition.y < 50
+                  ? 'The sun is currently on the left side of the aircraft.'
+                  : 'The sun is currently on the right side of the aircraft.'
+            }
+          </p>
         </div>
       </div>
 
@@ -396,6 +454,6 @@ export default function SunFlightTimeline({
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
