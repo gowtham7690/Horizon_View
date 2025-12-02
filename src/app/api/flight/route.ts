@@ -25,7 +25,7 @@ export interface FlightRouteResponse {
     duration: number;
     path: [number, number][];
     sunData: {
-      scenicSide: 'left' | 'right' | 'both';
+      scenicSide: 'left' | 'right' | 'both' | 'none';
       recommendedSeats: string[];
       sunriseTime: string;
       sunsetTime: string;
